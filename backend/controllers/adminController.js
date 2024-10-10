@@ -1,4 +1,7 @@
+
+
 const Admin = require('../models/Admin');
+const bcrypt = require('bcrypt');
 
 // Handle admin login
 exports.loginAdmin = async (req, res) => {
@@ -11,8 +14,9 @@ exports.loginAdmin = async (req, res) => {
             return res.status(401).json({ message: 'Invalid username or password.' });
         }
 
-        // Check if the password matches (you might want to hash passwords in a real app)
-        if (admin.password !== password) {
+        // Check if the password matches
+        const isMatch = await bcrypt.compare(password, admin.password);
+        if (!isMatch) {
             return res.status(401).json({ message: 'Invalid username or password.' });
         }
 

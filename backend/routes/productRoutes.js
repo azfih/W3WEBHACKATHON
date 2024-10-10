@@ -1,11 +1,13 @@
 const express = require('express');
-const { submitProductRequest, acceptProductRequest } = require('../controllers/productController');
+const { submitProduct, acceptProduct, getUserRequests} = require('../controllers/productController');
 const router = express.Router();
 
-// Route to handle product request submission and estimation
-router.post('/submit', submitProductRequest);
+// Route to handle product submission
+router.post('/submit', submitProduct);
 
-// Route to accept the product request
-router.post('/accept', acceptProductRequest);
+// Route to accept the product submission
+router.post('/accept', acceptProduct);
+// Route to get all requests for a specific user
+router.get('/user-requests/:userId', getUserRequests); // New route for getting user requests
 
 module.exports = router;

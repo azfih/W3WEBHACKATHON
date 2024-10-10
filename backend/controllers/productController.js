@@ -1,71 +1,142 @@
-const ProductRequest = require('../models/ProductRequest');
+const Product = require('../models/Product');
 const User = require('../models/User.js');
-const axios = require('axios'); // Ensure axios is installed
 
-// Handle product request submission and price estimation
-exports.submitProductRequest = async (req, res) => {
-    const { userId, productName, productCategory, productCondition, storageCapacity, defects } = req.body;
+// Handle product submission and price estimation
+exports.submitProduct = async (req, res) => {
+    const {
+        userId,
+        deviceType,
+        brand,
+        model,
+        yearOfPurchase,
+        condition,
+        storageCapacity,
+        defects,
+        serialNumber,
+        pictures,
+        pickup,
+    } = req.body;
 
     // Check if the user is verified
     const user = await User.findById(userId);
     if (!user || !user.isVerified) {
-        return res.status(403).json({ message: 'User must be verified to submit a product request.' });
+        return res.status(403).json({ message: 'User must be verified to submit a product.' });
     }
 
-    // Calculate the estimated price from an external source
-    const estimatedPrice = await calculateEstimatedPrice(productName, productCondition, storageCapacity);
+    // Calculate the estimated price
+    const estimatedPrice = calculateEstimatedPrice(brand, condition, storageCapacity, pickup);
 
-    // Respond with the estimated price and ask for acceptance
+    // Send the estimated price back to the frontend
     res.status(200).json({
         estimatedPrice,
-        message: 'Please accept or reject the estimated price.',
+        message: 'Estimated price calculated. Please accept or reject.',
     });
 };
 
-// Function to calculate the estimated price from an external API or logic
-const calculateEstimatedPrice = async (productName, productCondition, storageCapacity) => {
-    let basePrice = 100; // Base price for demonstration
+// Function to calculate the estimated price (same as before)
+const calculateEstimatedPrice = (brand, condition, storageCapacity, pickup) => {
+    const basePrices = {
+        "Apple": 800,
+        "Samsung": 600,
+        "Google": 500,
+        "OnePlus": 400,
+        "Dell": 700,
+        "HP": 650,
+        "Lenovo": 600,
+    };
 
-    // Example of getting the original price from an API (replace with actual API)
-    // const response = await axios.get(`https://api.example.com/products/${productName}`);
-    // const originalPrice = response.data.price;
+    let basePrice = basePrices[brand] || 300; // Default if brand is unknown
 
-    // Here we'll just mock the pricing logic instead
-    if (productCondition === 'used') basePrice -= 20;
-    if (productCondition === 'damaged') basePrice -= 50;
+    // Adjust based on condition
+    switch (condition) {
+        case 'new':
+            break; // No adjustment
+        case 'used':
+            basePrice -= basePrice * 0.2; // 20% deduction for used
+            break;
+        case 'damaged':
+            basePrice -= basePrice * 0.5; // 50% deduction for damaged
+            break;
+        default:
+            break;
+    }
 
-    // Adjust price based on storage capacity
-    if (storageCapacity === '256GB') basePrice += 30;
+    // Adjust based on storage capacity
+    if (storageCapacity === '64GB') {
+        basePrice += 20; // Small increase for 64GB
+    } else if (storageCapacity === '128GB') {
+        basePrice += 50; // Increase for 128GB
+    } else if (storageCapacity === '256GB') {
+        basePrice += 100; // Increase for 256GB
+    }
 
-    return basePrice;
+    // Add pickup fees if selected
+    if (pickup) {
+        basePrice += 30; // Example pickup fee
+    }
+
+    return Math.max(basePrice, 0); // Ensure price doesn't go negative
 };
-
-// New method to accept the price and save the product request
-exports.acceptProductRequest = async (req, res) => {
-    const { userId, productName, productCategory, productCondition, storageCapacity, defects, estimatedPrice } = req.body;
+// New method to accept the product submission
+exports.acceptProduct = async (req, res) => {
+    const {
+        userId,
+        deviceType,
+        brand,
+        model,
+        yearOfPurchase,
+        condition,
+        storageCapacity,
+        defects,
+        serialNumber,
+        pictures,
+        pickup,
+        estimatedPrice,
+    } = req.body;
 
     // Check if the user is verified
     const user = await User.findById(userId);
     if (!user || !user.isVerified) {
-        return res.status(403).json({ message: 'User must be verified to submit a product request.' });
+        return res.status(403).json({ message: 'User must be verified to submit a product.' });
     }
 
+    // Create a new product entry
     try {
-        const productRequest = new ProductRequest({
-            user: user._id,
-            productName,
-            productCategory,
-            productCondition,
+        const product = new Product({
+            userId: user._id,
+            deviceType,
+            brand,
+            model,
+            yearOfPurchase,
+            condition,
             storageCapacity,
             defects,
-            estimatedPrice, // Save the accepted estimated price
-            status: 'Accepted', // Set status to accepted
+            serialNumber,
+            pictures,
+            pickup,
+            estimatedPrice,
+            status: 'Pending', // Initial status
         });
 
-        await productRequest.save();
-        res.status(201).json({ message: 'Product request submitted successfully!', productRequest });
+        await product.save();
+        res.status(201).json({ message: 'Product submitted successfully!', product });
     } catch (error) {
-        console.error('Error submitting product request:', error.message);
+        console.error('Error submitting product:', error.message);
+        res.status(500).json({ error: 'Server Error' });
+    }
+};
+// Get all product requests for a specific user
+exports.getUserRequests = async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const requests = await Product.find({ userId }) // Find requests by user ID
+            .select('deviceType brand model yearOfPurchase condition storageCapacity estimatedPrice status createdAt') // Select only the fields you want
+            .sort({ createdAt: -1 }); // Sort by creation date
+
+        res.status(200).json(requests);
+    } catch (error) {
+        console.error('Error fetching user requests:', error.message);
         res.status(500).json({ error: 'Server Error' });
     }
 };
