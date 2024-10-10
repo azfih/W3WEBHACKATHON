@@ -26,10 +26,28 @@ const IdentityVerification = ({ onNext }) => {
         );
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (validateForm()) {
-            onNext();
+            try {
+                const response = await fetch('http://localhost:4000/api/olx/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(identityDetails),
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(data.message);
+                    onNext(); // Call the onNext function if the submission is successful
+                } else {
+                    alert(data.error || 'An error occurred during submission.');
+                }
+            } catch (error) {
+                alert('Network error: ' + error.message);
+            }
         } else {
             alert('Please enter valid details in the form.');
         }

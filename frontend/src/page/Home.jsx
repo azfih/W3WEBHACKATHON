@@ -20,17 +20,18 @@ function Home() {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           <div className="p-6">
-            <img src="device-icon.png" alt="Device" className="mx-auto mb-4" />
+          <img src="/images/1.jpg" alt="Device" className="mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-800">1. Select Your Device</h3>
             <p className="text-gray-600 mt-2">Choose from a wide range of devices to sell.</p>
           </div>
           <div className="p-6">
-            <img src="price-icon.png" alt="Price" className="mx-auto mb-4" />
+          <img src="/images/2.jpg" alt="Price" className="mx-auto mb-4" />
+
             <h3 className="text-xl font-semibold text-gray-800">2. Get an Instant Price</h3>
             <p className="text-gray-600 mt-2">We calculate a competitive price instantly.</p>
           </div>
           <div className="p-6">
-            <img src="payment-icon.png" alt="Payment" className="mx-auto mb-4" />
+          <img src="/images/3.avif" alt="Payment" className="mx-auto mb-4 h-[19vw] w-[26.5vw]" />
             <h3 className="text-xl font-semibold text-gray-800">3. Confirm and Get Paid</h3>
             <p className="text-gray-600 mt-2">Secure payments through your chosen method.</p>
           </div>
